@@ -40,6 +40,16 @@ As far as _what we're building_ ... I haven't decided yet. We're just going to s
     If it's easier, feel free to use this:
     
     `mkdir -p hc/tests/src hc/workdir hc/zomes/greeter/src ui`
+    
+1. And just for completeness, let's drop a `.gitignore` file in the `hc` folder with these contents:
+
+    ```
+    .hc        # holochain temp folder?
+    .cargo     # by-product of using Rust from a Nix shell?
+    debug      # Rust build artifact
+    target     # Rust build artifact
+    **/*.rs.bk # rustfmt backup files
+    ```
 
 ## Our development environment
 
