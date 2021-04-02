@@ -11,7 +11,7 @@ The plan is to explain _some_ concepts when we bump up against them, but I'll pr
 
 We will be building a complete Holochain app that includes testing and a user interface. We'll start with a simple zome, add the smallest test we can write, and call the zome from a simple web client.
 
-Once we have something simple that operates across the full stack, we'll add more complexity by adding more features to the app.
+Once we have something simple that operates across the full stack, we'll add more complexity by adding more features to the app. This will allow us to learn different aspects of Holochain as we need the functionality.
 
 As far as _what we're building_ ... I haven't decided yet. We're just going to start. Perhaps we'll identify the path we're on once we start walking.
 
@@ -28,18 +28,17 @@ As far as _what we're building_ ... I haven't decided yet. We're just going to s
 
     ```
     . # tutorial
-    ├── hc
-    │   ├── tests
-    │   │   └── src
-    │   ├── workdir
-    │   └── zomes
-    │       └── greeter
-    │           └── src
-    ├── ui
+    └── hc
+        ├── tests
+        │   └── src
+        ├── workdir
+        └── zomes
+            └── greeter
+                └── src
     ```
     If it's easier, feel free to use this:
     
-    `mkdir -p hc/tests/src hc/workdir hc/zomes/greeter/src ui`
+    `mkdir -p hc/tests/src hc/workdir hc/zomes/greeter/src`
     
 1. And just for completeness, let's drop a `.gitignore` file in the `hc` folder with these contents:
 
@@ -50,6 +49,8 @@ As far as _what we're building_ ... I haven't decided yet. We're just going to s
     target     # Rust build artifact
     **/*.rs.bk # rustfmt backup files
     ```
+    
+Now that we have our files and folders in place, let's finish setting up our development environment.
 
 ## Our development environment
 
@@ -292,3 +293,58 @@ We have the option of writing 2 different types of tests: unit tests written in 
 
 ## Build some user interface
 
+Holochain doesn't force you to use specific technologies for the user interface. You only need to use something that can send [msgpack](https://msgpack.org) messages to the Websocket endpoint the conductor is listening to. To make this easier, we'll use JavaScript so we can use the [conductor-api](https://www.npmjs.com/package/@holochain/conductor-api) package.
+
+The user interface technology, and how to use it, is not the focus of this tutorial. So we're going to do the most basic thing we can that keeps the focus on how to interact with the Holochain conductor. To that end, we're going to use [Svelte](https://svelte.dev) and [Snowpack](https://www.snowpack.dev).
+
+> Note: this is my first time using Svelte and Snowpack. So if you see something egregious, please let me know.
+
+1. Let's start in our tutorial folder (not `hc`) and get a basic web app in place by running this in your terminal:
+
+    ```
+    npx create-snowpack-app ui --template @snowpack/app-template-minimal
+    ```
+
+1. Now install some necessary dependencies.
+
+    ```
+    cd ui
+    npm install svelte @snowpack/plugin-svelte @holochain/conductor-api
+    ```
+    
+    Note: we'll stay in the `ui` folder for the remainder of the UI part of the tutorial.
+
+1. Add a `App.svelte` file:
+
+    ```svelte=
+    <script>
+      let greeting = ''
+      function handleClick () {
+        greeting = 'Hello from Svelte'
+      }
+    </script>
+    <div>
+      <button on:click={handleClick}>Say hello</button>
+      <p>Greeting: {greeting}</p>
+    </div>
+    ```
+
+1. Fix up our `index.js` file:
+
+    ```js=
+    import App from "./App.svelte"
+
+    const app = new App({
+      target: document.body
+    })
+
+    export default app
+    ```
+    
+1. Ensure we're working up to this point.
+
+    ```
+    npm start
+    ```
+    
+    This should open your browser on [http://localhost:8080](http://localhost:8080). You should be able to see the message display when you click this button without any errors in your console.
