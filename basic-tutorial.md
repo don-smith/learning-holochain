@@ -23,6 +23,7 @@ As far as _what we're building_ ... I haven't decided yet. We're just going to s
     - **DO NOT** follow the instructions for _Installing the Holochain dev tools_, which is the section just after installation in the links above. This tutorial will follow a more recent approach to this part of the setup.
 
 1. Create a folder to build this tutorial in. Optionally make it a git repo.
+1. Ensure you have Node.js and npm installed correctly by running: `node -v; npm -v`
 1. Create additional folders. Make them look like this:
 
     ```
@@ -31,16 +32,14 @@ As far as _what we're building_ ... I haven't decided yet. We're just going to s
     │   ├── tests
     │   │   └── src
     │   ├── workdir
-    │   │   ├── dna
-    │   │   └── happ
     │   └── zomes
-    │       └── hello
+    │       └── greeter
     │           └── src
     ├── ui
     ```
     If it's easier, feel free to use this:
     
-    `mkdir -p hc/tests/src hc/workdir/{dna,happ} hc/zomes/hello/src ui`
+    `mkdir -p hc/tests/src hc/workdir hc/zomes/greeter/src ui`
 
 ## Our development environment
 
@@ -79,13 +78,13 @@ In your terminal, navigate to your tutorial folder and open the Nix shell.
 nix-shell .
 ```
 
-This might take a while, so let's write some code while we wait. It's fine to open another terminal window in the same folder, open your code editor, create files, etc. while we wait.
+This might take a while, so let's continue to prepare while we wait. It's fine to open another terminal window in the same folder, open your code editor, create files, etc. while we wait.
 
 ## Building the first zome
 
 We're going to take real small baby steps to start off. Our first zome will contain a single function, named `hello`, that has no input parameters and returns a static string.
 
-1. Create `hc/zomes/hello/src/lib.rs` with these contents:
+1. Create `hc/zomes/greeter/src/lib.rs` with these contents:
 
     ```rust=
     use hdk::prelude::*;
@@ -100,17 +99,17 @@ We're going to take real small baby steps to start off. Our first zome will cont
     The `hdk_extern` attribute marks the function as available to be called by the Holochain conductor.
     The `ExternResult` type ensures we're returning a type that can be serialized back to the user interface.
 
-1. Create `hc/zomes/hello/Cargo.toml` with these contents:
+1. Create `hc/zomes/greeter/Cargo.toml` with these contents:
 
     ```toml=
     [package]
-    name = "hello"
+    name = "greeter"
     version = "0.0.1"
     authors = [ "[your name]", "[your email address]" ]
     edition = "2018"
 
     [lib]
-    name = "hello"
+    name = "greeter"
     crate-type = [ "cdylib", "rlib" ]
 
     [dependencies]
@@ -118,14 +117,14 @@ We're going to take real small baby steps to start off. Our first zome will cont
     serde = "1"
     ```
     
-    This file defines the metadata for our `hello` zome.
+    This file defines the metadata for our `greeter` zome.
 
 1. Create another `Cargo.toml` file with these contents:
 
     ```toml=
     [workspace]
     members = [
-      "zomes/hello",
+      "zomes/greeter",
     ]
 
     [profile.dev]
@@ -142,3 +141,144 @@ We're going to take real small baby steps to start off. Our first zome will cont
     ```sh
     CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown
     ```
+    
+    If this succeeded, you won't see any errors, but you will have an `hc/target/wasm32-unknown-unknown/release/greeter.wasm` file.
+    
+1. Now let's build the DNA file
+
+    ```sh
+    hc dna init workdir/dna
+    ```
+    
+1. Add the zome to the `zomes` array in the newly created DNA file `hc/workdir/dna/dna.yaml` so it looks like this:
+
+    ```yaml
+    ---
+    manifest_version: "1"
+    name: greeter
+    uuid: 00000000-0000-0000-0000-000000000000
+    properties: ~
+    zomes:
+      - name: greeter
+        bundled: ../../target/wasm32-unknown-unknown/release/greeter.wasm
+    ```
+    
+1. Package the WASM into a DNA file.
+
+    ```sh
+    hc dna pack workdir/dna
+    ```
+    
+    This will create `hc/workdir/dna/greeter.dna`. Now we're ready to do zome testing :wink: (sorry, I couldn't resist).
+
+## Test the first zome
+
+We have the option of writing 2 different types of tests: unit tests written in Rust, and integration tests written in TypeScript. Writing a unit test doesn't have anything to do with Holochain - we just write them as we would any Rust code. However, our integration tests use the [Tryorama](https://github.com/holochain/tryorama) tool to create a mock environment. We'll forego writing unit tests for the time being and setup our integration testing environment instead.
+
+1. Inside your `hc/tests` folder, let's create some new files.
+
+    **`package.json`**
+
+    ```json=
+   {
+      "name": "hello-integration-tests",
+      "version": "0.0.1",
+      "description": "An integration test runner using Tryorama",
+      "main": "index.js",
+      "scripts": {
+        "test": "TRYORAMA_LOG_LEVEL=info RUST_LOG=error RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/index.ts"
+      },
+      "author": "Keen Holo Dev",
+      "license": "ISC",
+      "dependencies": {
+        "@holochain/tryorama": "0.4.1",
+        "@msgpack/msgpack": "^2.5.1",
+        "@types/lodash": "^4.14.168",
+        "@types/node": "^14.14.37",
+        "lodash": "^4.17.21",
+        "tape": "^5.2.2",
+        "ts-node": "^9.1.1",
+        "typescript": "^4.2.3"
+      }
+    } 
+    ```
+    
+    **`tsconfig.json`**
+    
+    ```json=
+    {
+      "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "resolveJsonModule": true,
+        "strict": true,
+        "noImplicitAny": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true
+      }
+    }
+    ```
+    
+    **`.gitignore`**
+    
+    ```
+    node_modules/
+    *.log
+    ```
+    
+1. In preparation for our test run, from the `hc/tests` folder, install our dependencies.
+
+    `npm install`
+    
+1. For our test file, let's create this `index.ts` file in our `src` folder.
+
+    ```ts=
+    import path from "path";
+    import { Orchestrator, Config, InstallAgentsHapps } from "@holochain/tryorama";
+
+    // Create a configuration for our conductor
+    const conductorConfig = Config.gen();
+
+    // Construct proper paths for your DNAs
+    const dnaPath = path.join(__dirname, "../../workdir/dna/greeter.dna");
+
+    // create an InstallAgentsHapps array with your DNAs to tell tryorama what
+    // to install into the conductor.
+    const installation: InstallAgentsHapps = [
+      // agent 0
+      [
+        // happ 0
+        [dnaPath],
+      ],
+    ];
+
+    const orchestrator = new Orchestrator();
+
+    orchestrator.registerScenario("holo says hello", async (s, t) => {
+      const [alice] = await s.players([conductorConfig]);
+
+      // install your happs into the coductors and destructuring the returned happ data using the same
+      // array structure as you created in your installation array.
+      const [[alice_common]] = await alice.installAgentsHapps(installation);
+
+      let result = await alice_common.cells[0].call("greeter", "hello", null);
+      t.equal(result, "Hello Holo Dev");
+    });
+
+    orchestrator.run();
+    ```
+    
+1. Now, from inside our `hc/tests` folder, we can run our test with: `npm test`. Everything is passing/working if the end of our output is
+
+    ```sh
+    # tests 1
+    # pass  1
+    
+    # ok
+    ```
+
+1. Now is a good time to make sure you can break the test in an expected way. For example, on line #30, change `"Hello Holo Dev"` to something else and re-run the test to watch it fail.
+
+## Build some user interface
+
