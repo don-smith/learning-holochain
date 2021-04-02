@@ -1,0 +1,21 @@
+{
+  "name": "hello-integration-tests",
+  "version": "0.0.1",
+  "description": "An integration test runner using Tryorama",
+  "main": "index.js",
+  "scripts": {
+    "test": "TRYORAMA_LOG_LEVEL=info RUST_LOG=error RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/index.ts"
+  },
+  "author": "Keen Holo Dev",
+  "license": "ISC",
+  "dependencies": {
+    "@holochain/tryorama": "0.4.1",
+    "@msgpack/msgpack": "^2.5.1",
+    "@types/lodash": "^4.14.168",
+    "@types/node": "^14.14.37",
+    "lodash": "^4.17.21",
+    "tape": "^5.2.2",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3"
+  }
+}

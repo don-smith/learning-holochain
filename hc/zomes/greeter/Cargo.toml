@@ -1,0 +1,13 @@
+[package]
+name = "greeter"
+version = "0.0.1"
+authors = [ "Don", "hi@dons.dev" ]
+edition = "2018"
+
+[lib]
+name = "greeter"
+crate-type = [ "cdylib", "rlib" ]
+
+[dependencies]
+hdk = "0.0.100"
+serde = "1"
