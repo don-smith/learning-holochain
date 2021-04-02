@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "start": "snowpack dev",
+    "build": "snowpack build",
+    "test": "echo \"This template does not include a test runner by default.\" && exit 1"
+  },
+  "devDependencies": {
+    "snowpack": "^3.0.1"
+  },
+  "dependencies": {
+    "@holochain/conductor-api": "^0.0.2",
+    "@snowpack/plugin-svelte": "^3.6.1",
+    "svelte": "^3.37.0"
+  }
+}
