@@ -10,6 +10,7 @@
   "dependencies": {
     "@holochain/conductor-api": "^0.0.2",
     "@snowpack/plugin-svelte": "^3.6.1",
+    "buffer": "^6.0.3",
     "svelte": "^3.37.0"
   }
 }

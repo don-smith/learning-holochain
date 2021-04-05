@@ -1,7 +1,7 @@
 ---
 manifest_version: "1"
-name: greeter
-description: Greeter hApp
+name: tutorial
+description: Tutorial hApp
 slots:
   - id: sample-slot
     provisioning:
