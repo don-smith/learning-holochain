@@ -5,7 +5,9 @@ This tutorial exists for 2 reasons:
 * To solidify the understanding of these concepts for the author (me).
 * To provide a path that might help others on this learning journey. 
 
-The plan is to explain _some_ concepts when we bump up against them, but I'll provide links to learn more about _other_ concepts. I probably won't be consistent - and I'll most likely refactor some topics/steps into other documents as I move through the completion of this thing.
+The plan is to explain _some_ concepts when we bump up against them, but I'll provide links to learn more about _other_ concepts. I probably won't be too consistent initially - and I'll most likely refactor some topics/steps into other documents as I move through the completion of this thing. But eventually, I'd like it to be a useful on-boarding resource for aspiring Holochain devs.
+
+> This tutorial is maintained on [GitHub](https://github.com/don-smith/learning-holochain) and available for easy reading and collaboration on [HackMD](https://hackmd.io/@donsmith/basic-hc-tut). If you have any questions or improvement recommendations, [please leave a comment](https://hackmd.io/@donsmith/basic-hc-tut), rather than creating an issue on GitHub.
 
 ## Where we're going
 
@@ -15,7 +17,7 @@ Once we have something simple that operates across the full stack, we'll add mor
 
 As far as _what we're building_ ... I haven't decided yet. We're just going to start. Perhaps we'll identify the path we're on once we start walking.
 
-## Setup
+## Setting things up
 
 1. Install the Nix package manager
 
@@ -52,7 +54,7 @@ As far as _what we're building_ ... I haven't decided yet. We're just going to s
     
 Now that we have our files and folders in place, let's finish setting up our development environment.
 
-## Our development environment
+## Our dev environment
 
 In order to ensure a consistent environment, the Holochain dev environment uses Nix/NixOS. At the moment, we're using project-specific environment configurations and they exist in the form of a `default.nix` file.
 
@@ -91,7 +93,7 @@ nix-shell .
 
 This might take a while, so let's continue to prepare while we wait. It's fine to open another terminal window in the same folder, open your code editor, create files, etc. while we wait.
 
-## Building the first zome
+## Building our first zome
 
 We're going to take real small baby steps to start off. Our first zome will contain a single function, named `hello`, that has no input parameters and returns a static string.
 
@@ -182,7 +184,7 @@ We're going to take real small baby steps to start off. Our first zome will cont
     
     This will create `hc/workdir/dna/greeter.dna`. Now we're ready to do zome testing :wink: (sorry, I couldn't resist).
 
-## Test the first zome
+## Testing our first zome
 
 We have the option of writing 2 different types of tests: unit tests written in Rust, and integration tests written in TypeScript. Writing a unit test doesn't have anything to do with Holochain - we just write them as we would any Rust code. However, our integration tests use the [Tryorama](https://github.com/holochain/tryorama) tool to create a mock environment. We'll forego writing unit tests for the time being and setup our integration testing environment instead.
 
@@ -291,7 +293,7 @@ We have the option of writing 2 different types of tests: unit tests written in 
 
 1. Now is a good time to make sure you can break the test in an expected way. For example, on line #30, change `"Hello Holo Dev"` to something else and re-run the test to watch it fail.
 
-## Build some user interface
+## Building some web UI
 
 Holochain doesn't force you to use specific technologies for the user interface. You only need to use something that can send [msgpack](https://msgpack.org) messages to the Websocket endpoint the conductor is listening to. To make this easier, we'll use JavaScript so we can use the [conductor-api](https://www.npmjs.com/package/@holochain/conductor-api) package.
 
@@ -305,16 +307,29 @@ The user interface technology, and how to use it, is not the focus of this tutor
     npx create-snowpack-app ui --template @snowpack/app-template-minimal
     ```
 
-1. Now install some necessary dependencies.
+1. We don't need Git submodules, so delete the new repo and install some necessary dependencies.
 
     ```
     cd ui
-    npm install svelte @snowpack/plugin-svelte @holochain/conductor-api
+    rm -rf .git
+    npm install svelte @snowpack/plugin-svelte
     ```
     
     Note: we'll stay in the `ui` folder for the remainder of the UI part of the tutorial.
+    
+1. Tell Snowpack about Svelte by adding its plugin to the config. Make this change to line 6 of `snowpack.config.js`:
 
-1. Add a `App.svelte` file:
+    ```js=
+    module.exports = {
+      mount: {
+        /* ... */
+      },
+      plugins: [
+        '@snowpack/plugin-svelte'
+      ],
+    ```
+
+1. Add an `App.svelte` file:
 
     ```svelte=
     <script>
@@ -329,7 +344,7 @@ The user interface technology, and how to use it, is not the focus of this tutor
     </div>
     ```
 
-1. Fix up our `index.js` file:
+1. Fix up our `index.js` file so it looks like this:
 
     ```js=
     import App from "./App.svelte"
@@ -348,3 +363,46 @@ The user interface technology, and how to use it, is not the focus of this tutor
     ```
     
     This should open your browser on [http://localhost:8080](http://localhost:8080). You should be able to see the message display when you click this button without any errors in your console.
+
+## Calling the `hello` zome
+
+Before we can call the zome, we need to build the hApp bundle and deploy it to the local Holochain.
+
+1. Create the hApp bundle by running this in your nix-shell from the `hc` folder:
+
+    ```
+    hc app init workdir/happ
+    ```
+   
+   When prompted, enter `greeter` for the _name_ and `Greeter hApp` for the _description_.
+
+1. Update our `hc/workdir/happ/happ.yaml` to fix the bundle path of our DNA by making the `dna` section look like this:
+
+    ```
+    dna:
+      bundled: "../dna/greeter.dna"
+      properties: ~
+      uuid: ~
+      version: ~
+      clone_limit: 0
+
+    ```
+   
+1. Package our DNA into a hApp bundle by running this in your nix-shell. This will create `hc/workdir/happ/greeter.happ`.
+
+    ```
+    hc app pack workdir/happ
+    ```
+    
+   
+1. Deploy the hApp to a local sandbox Holochain by running this in your nix-shell:
+
+    ```
+    hc sandbox generate workdir/happ/ --run=8888
+    ```
+    
+1. Install the `????` package for communicating with the conductor.
+
+    _Doh! Which front-end package should we use to invoke the conductor?_
+    
+    :thinking_face: 
