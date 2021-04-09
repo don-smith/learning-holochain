@@ -1,6 +1,3 @@
----
-tags: tutorial
----
 # A Holochain Developer Tutorial - Part 1
 
 [![hackmd-github-sync-badge](https://hackmd.io/rNCiNe_zQ7aT3oKEl8UCqQ/badge)](https://hackmd.io/rNCiNe_zQ7aT3oKEl8UCqQ)
