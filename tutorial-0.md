@@ -1,9 +1,6 @@
----
-tags: tutorial
----
-[![hackmd-github-sync-badge](https://hackmd.io/S1wY2vU2RKy8GhWyMBXGmg/badge)](https://hackmd.io/S1wY2vU2RKy8GhWyMBXGmg)
-
 # A Holochain Developer Tutorial
+
+[![hackmd-github-sync-badge](https://hackmd.io/S1wY2vU2RKy8GhWyMBXGmg/badge)](https://hackmd.io/S1wY2vU2RKy8GhWyMBXGmg)
 
 This tutorial intends to be a step-by-step walk-through of building a Holochain application (hApp). The app's features are chosen specifically to highlight capabilities of the Holochain platform and are implemented in an order that should build on previous concepts.
 
