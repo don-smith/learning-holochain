@@ -23,7 +23,7 @@ As far as _what we're building_ ... I haven't decided yet. We're just going to s
 
     ```
     . # tutorial
-    └── hc
+    └── happ
         ├── tests
         │   └── src
         ├── workdir
@@ -32,10 +32,10 @@ As far as _what we're building_ ... I haven't decided yet. We're just going to s
                 └── src
     ```
     If it's easier, feel free to use this:
-    
-    `mkdir -p hc/tests/src hc/workdir hc/zomes/greeter/src`
-    
-1. And just for completeness, let's drop a `.gitignore` file in the `hc` folder with these contents:
+
+    `mkdir -p happ/tests/src happ/workdir happ/zomes/greeter/src`
+
+1. And just for completeness, let's drop a `.gitignore` file in the `happ` folder with these contents:
 
     ```
     .hc        # holochain temp folder?
@@ -44,7 +44,7 @@ As far as _what we're building_ ... I haven't decided yet. We're just going to s
     target     # Rust build artifact
     **/*.rs.bk # rustfmt backup files
     ```
-    
+
 Now that we have our files and folders in place, let's finish setting up our development environment.
 
 ## Our dev environment
@@ -54,7 +54,7 @@ In order to ensure a consistent environment, the Holochain dev environment uses 
 Create a `default.nix` file with these contents in your tutorial folder.
 
 ```nix=
-let 
+let
   holonixPath = builtins.fetchTarball {
     url = "https://github.com/holochain/holonix/archive/90a19d5771c069dbcc9b27938009486b54b12fb7.tar.gz";
     sha256 = "11wv7mwliqj38jh1gda3gd0ad0vqz1d42hxnhjmqdp037gcd2cjg";
@@ -62,8 +62,8 @@ let
   holonix = import (holonixPath) {
     includeHolochainBinaries = true;
     holochainVersionId = "custom";
-    
-    holochainVersion = { 
+
+    holochainVersion = {
      rev = "d3a61446acaa64b1732bc0ead5880fbc5f8e3f31";
      sha256 = "0k1fsxg60spx65hhxqa99nkiz34w3qw2q4wspzik1vwpkhk4pwqv";
      cargoSha256 = "0fz7ymyk7g3jk4lv1zh6gbn00ad7wsyma5r7csa88myl5xd14y68";
@@ -90,7 +90,7 @@ This might take a while, so let's continue to prepare while we wait. It's fine t
 
 We're going to take real small baby steps to start off. Our first zome will contain a single function, named `hello`, that has no input parameters and returns a static string.
 
-1. Create `hc/zomes/greeter/src/lib.rs` with these contents:
+1. Create `happ/zomes/greeter/src/lib.rs` with these contents:
 
     ```rust=
     use hdk::prelude::*;
@@ -100,12 +100,12 @@ We're going to take real small baby steps to start off. Our first zome will cont
     Ok(String::from("Hello Holo Dev"))
     }
     ```
-    
+
     The `use` statement on line #1 brings in the HDK.
     The `hdk_extern` attribute marks the function as available to be called by the Holochain conductor.
     The `ExternResult` type ensures we're returning a type that can be serialized back to the user interface.
 
-1. Create `hc/zomes/greeter/Cargo.toml` with these contents:
+1. Create `happ/zomes/greeter/Cargo.toml` with these contents:
 
     ```toml=
     [package]
@@ -122,7 +122,7 @@ We're going to take real small baby steps to start off. Our first zome will cont
     hdk = "0.0.100"
     serde = "1"
     ```
-    
+
     This file defines the metadata for our `greeter` zome.
 
 1. Create another `Cargo.toml` file with these contents:
@@ -139,26 +139,26 @@ We're going to take real small baby steps to start off. Our first zome will cont
     [profile.release]
     opt-level = "z"
     ```
-    
+
     This file defines all of the zomes in our project.
-    
-1. Hopefully our Nix shell has finished building. If not, you'll have to wait before completing this step. Let's build the zome into Web Assembly (WASM). From the `hc` folder, inside your nix-shell, run this:
+
+1. Hopefully our Nix shell has finished building. If not, you'll have to wait before completing this step. Let's build the zome into Web Assembly (WASM). From the `happ` folder, inside your nix-shell, run this:
 
     ```sh
     CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown
     ```
-    
-    If this succeeded, you won't see any errors, but you will have an `hc/target/wasm32-unknown-unknown/release/greeter.wasm` file.
-    
+
+    If this succeeded, you won't see any errors, but you will have an `happ/target/wasm32-unknown-unknown/release/greeter.wasm` file.
+
 1. Now let's build the DNA file
 
     ```sh
     hc dna init workdir/dna
     ```
-    
+
     When prompted, enter `greeter` as the _name_ and leave the _uuid_ with its default value by just hitting enter.
-    
-1. Add the zome to the `zomes` array in the newly created DNA file `hc/workdir/dna/dna.yaml` so it looks like this:
+
+1. Add the zome to the `zomes` array in the newly created DNA file `happ/workdir/dna/dna.yaml` so it looks like this:
 
     ```yaml
     ---
@@ -170,20 +170,20 @@ We're going to take real small baby steps to start off. Our first zome will cont
       - name: greeter
         bundled: ../../target/wasm32-unknown-unknown/release/greeter.wasm
     ```
-    
+
 1. Package the WASM into a DNA file.
 
     ```sh
     hc dna pack workdir/dna
     ```
-    
-    This will create `hc/workdir/dna/greeter.dna`. Now we're ready to do zome testing :wink: (sorry, I couldn't resist).
+
+    This will create `happ/workdir/dna/greeter.dna`. Now we're ready to do zome testing :wink: (sorry, I couldn't resist).
 
 ## Testing our first zome
 
 We have the option of writing 2 different types of tests: unit tests written in Rust, and integration tests written in TypeScript. Writing a unit test doesn't have anything to do with Holochain - we just write them as we would any Rust code. However, our integration tests use the [Tryorama](https://github.com/holochain/tryorama) tool to create a mock environment. We'll forego writing unit tests for the time being and setup our integration testing environment instead.
 
-1. Inside your `hc/tests` folder, let's create some new files.
+1. Inside your `happ/tests` folder, let's create some new files.
 
     **`package.json`**
 
@@ -208,11 +208,11 @@ We have the option of writing 2 different types of tests: unit tests written in 
         "ts-node": "^9.1.1",
         "typescript": "^4.2.3"
       }
-    } 
+    }
     ```
-    
+
     **`tsconfig.json`**
-    
+
     ```json=
     {
       "compilerOptions": {
@@ -227,18 +227,18 @@ We have the option of writing 2 different types of tests: unit tests written in 
       }
     }
     ```
-    
+
     **`.gitignore`**
-    
+
     ```
     node_modules/
     *.log
     ```
-    
-1. In preparation for our test run, from the `hc/tests` folder, install our dependencies.
+
+1. In preparation for our test run, from the `happ/tests` folder, install our dependencies.
 
     `npm install`
-    
+
 1. For our test file, let's create this `index.ts` file in our `src` folder.
 
     ```ts=
@@ -276,13 +276,13 @@ We have the option of writing 2 different types of tests: unit tests written in 
 
     orchestrator.run();
     ```
-    
-1. Now, from inside our `hc/tests` folder, we can run our test with: `npm test`. Everything is passing/working if the end of our output is
+
+1. Now, from inside our `happ/tests` folder, we can run our test with: `npm test`. Everything is passing/working if the end of our output is
 
     ```sh
     # tests 1
     # pass  1
-    
+
     # ok
     ```
 
@@ -296,7 +296,7 @@ The user interface technology, and how to use it, is not the focus of this tutor
 
 > Note: this is my first time using Svelte and Snowpack. So if you see something egregious, please let me know.
 
-1. Let's start in our tutorial folder (not `hc`) and get a basic web app in place by running this in your terminal:
+1. Let's start in our tutorial folder (not `happ`) and get a basic web app in place by running this in your terminal:
 
     ```
     npx create-snowpack-app ui --template @snowpack/app-template-minimal
@@ -309,9 +309,9 @@ The user interface technology, and how to use it, is not the focus of this tutor
     rm -rf .git
     npm install svelte @snowpack/plugin-svelte @holochain/conductor-api
     ```
-    
+
     Note: we'll stay in the `ui` folder for the remainder of the UI part of the tutorial.
-    
+
 1. Tell Snowpack about Svelte by adding its plugin to the config. Make this change to line 6 of `snowpack.config.js`:
 
     ```js=
@@ -350,28 +350,28 @@ The user interface technology, and how to use it, is not the focus of this tutor
 
     export default app
     ```
-    
+
 1. Ensure we're working up to this point.
 
     ```
     npm start
     ```
-    
+
     This should open your browser on [http://localhost:8080](http://localhost:8080). You should be able to see the message display when you click this button without any errors in your console.
 
 ## Calling the `hello` zome
 
 Before we can call the zome, we need to build the hApp bundle and deploy it to the local Holochain.
 
-1. Create the hApp bundle by running this in your nix-shell from the `hc` folder:
+1. Create the hApp bundle by running this in your nix-shell from the `happ` folder:
 
     ```
     hc app init workdir/happ
     ```
-   
+
    When prompted, enter `greeter` for the _name_ and `Greeter hApp` for the _description_.
 
-1. Update our `hc/workdir/happ/happ.yaml` to fix the bundle path of our DNA by making its `dna` section look like this:
+1. Update our `happ/workdir/happ/happ.yaml` to fix the bundle path of our DNA by making its `dna` section look like this:
 
     ```
     dna:
@@ -382,21 +382,21 @@ Before we can call the zome, we need to build the hApp bundle and deploy it to t
       clone_limit: 0
 
     ```
-   
+
 1. Package our DNA into a hApp bundle by running this in your nix-shell.
 
     ```
     hc app pack workdir/happ
     ```
-    
-    This will create `hc/workdir/happ/greeter.happ`
-   
+
+    This will create `happ/workdir/happ/greeter.happ`
+
 1. Deploy the hApp to a local sandbox Holochain by running this in your nix-shell:
 
     ```
     hc sandbox generate workdir/happ/ --run=8888
     ```
-    
+
 1. Invoke the zome function from the web UI.
 
     ```js=
