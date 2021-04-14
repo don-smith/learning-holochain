@@ -23,7 +23,7 @@ As far as _what we're building_ ... I haven't decided yet. We're just going to s
 
     ```
     . # tutorial
-    └── happ
+    └── service
         ├── tests
         │   └── src
         ├── workdir
@@ -33,9 +33,9 @@ As far as _what we're building_ ... I haven't decided yet. We're just going to s
     ```
     If it's easier, feel free to use this:
 
-    `mkdir -p happ/tests/src happ/workdir happ/zomes/greeter/src`
+    `mkdir -p service/tests/src service/workdir service/zomes/greeter/src`
 
-1. And just for completeness, let's drop a `.gitignore` file in the `happ` folder with these contents:
+1. And just for completeness, let's drop a `.gitignore` file in the `service` folder with these contents:
 
     ```
     .hc        # holochain temp folder?
@@ -90,7 +90,7 @@ This might take a while, so let's continue to prepare while we wait. It's fine t
 
 We're going to take real small baby steps to start off. Our first zome will contain a single function, named `hello`, that has no input parameters and returns a static string.
 
-1. Create `happ/zomes/greeter/src/lib.rs` with these contents:
+1. Create `service/zomes/greeter/src/lib.rs` with these contents:
 
     ```rust=
     use hdk::prelude::*;
@@ -105,7 +105,7 @@ We're going to take real small baby steps to start off. Our first zome will cont
     The `hdk_extern` attribute marks the function as available to be called by the Holochain conductor.
     The `ExternResult` type ensures we're returning a type that can be serialized back to the user interface.
 
-1. Create `happ/zomes/greeter/Cargo.toml` with these contents:
+1. Create `service/zomes/greeter/Cargo.toml` with these contents:
 
     ```toml=
     [package]
@@ -142,13 +142,13 @@ We're going to take real small baby steps to start off. Our first zome will cont
 
     This file defines all of the zomes in our project.
 
-1. Hopefully our Nix shell has finished building. If not, you'll have to wait before completing this step. Let's build the zome into Web Assembly (WASM). From the `happ` folder, inside your nix-shell, run this:
+1. Hopefully our Nix shell has finished building. If not, you'll have to wait before completing this step. Let's build the zome into Web Assembly (WASM). From the `service` folder, inside your nix-shell, run this:
 
     ```sh
     CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown
     ```
 
-    If this succeeded, you won't see any errors, but you will have an `happ/target/wasm32-unknown-unknown/release/greeter.wasm` file.
+    If this succeeded, you won't see any errors, but you will have an `service/target/wasm32-unknown-unknown/release/greeter.wasm` file.
 
 1. Now let's build the DNA file
 
@@ -158,7 +158,7 @@ We're going to take real small baby steps to start off. Our first zome will cont
 
     When prompted, enter `greeter` as the _name_ and leave the _uuid_ with its default value by just hitting enter.
 
-1. Add the zome to the `zomes` array in the newly created DNA file `happ/workdir/dna/dna.yaml` so it looks like this:
+1. Add the zome to the `zomes` array in the newly created DNA file `service/workdir/dna/dna.yaml` so it looks like this:
 
     ```yaml
     ---
@@ -177,13 +177,13 @@ We're going to take real small baby steps to start off. Our first zome will cont
     hc dna pack workdir/dna
     ```
 
-    This will create `happ/workdir/dna/greeter.dna`. Now we're ready to do zome testing :wink: (sorry, I couldn't resist).
+    This will create `service/workdir/dna/greeter.dna`. Now we're ready to do zome testing :wink: (sorry, I couldn't resist).
 
 ## Testing our first zome
 
 We have the option of writing 2 different types of tests: unit tests written in Rust, and integration tests written in TypeScript. Writing a unit test doesn't have anything to do with Holochain - we just write them as we would any Rust code. However, our integration tests use the [Tryorama](https://github.com/holochain/tryorama) tool to create a mock environment. We'll forego writing unit tests for the time being and setup our integration testing environment instead.
 
-1. Inside your `happ/tests` folder, let's create some new files.
+1. Inside your `service/tests` folder, let's create some new files.
 
     **`package.json`**
 
@@ -235,7 +235,7 @@ We have the option of writing 2 different types of tests: unit tests written in 
     *.log
     ```
 
-1. In preparation for our test run, from the `happ/tests` folder, install our dependencies.
+1. In preparation for our test run, from the `service/tests` folder, install our dependencies.
 
     `npm install`
 
@@ -277,7 +277,7 @@ We have the option of writing 2 different types of tests: unit tests written in 
     orchestrator.run();
     ```
 
-1. Now, from inside our `happ/tests` folder, we can run our test with: `npm test`. Everything is passing/working if the end of our output is
+1. Now, from inside our `service/tests` folder, we can run our test with: `npm test`. Everything is passing/working if the end of our output is
 
     ```sh
     # tests 1
@@ -296,7 +296,7 @@ The user interface technology, and how to use it, is not the focus of this tutor
 
 > Note: this is my first time using Svelte and Snowpack. So if you see something egregious, please let me know.
 
-1. Let's start in our tutorial folder (not `happ`) and get a basic web app in place by running this in your terminal:
+1. Let's start in our tutorial folder (not `service`) and get a basic web app in place by running this in your terminal:
 
     ```
     npx create-snowpack-app ui --template @snowpack/app-template-minimal
@@ -363,7 +363,7 @@ The user interface technology, and how to use it, is not the focus of this tutor
 
 Before we can call the zome, we need to build the hApp bundle and deploy it to the local Holochain.
 
-1. Create the hApp bundle by running this in your nix-shell from the `happ` folder:
+1. Create the hApp bundle by running this in your nix-shell from the `service` folder:
 
     ```
     hc app init workdir/happ
@@ -371,7 +371,7 @@ Before we can call the zome, we need to build the hApp bundle and deploy it to t
 
    When prompted, enter `greeter` for the _name_ and `Greeter hApp` for the _description_.
 
-1. Update our `happ/workdir/happ/happ.yaml` to fix the bundle path of our DNA by making its `dna` section look like this:
+1. Update our `service/workdir/happ/happ.yaml` to fix the bundle path of our DNA by making its `dna` section look like this:
 
     ```
     dna:
@@ -389,7 +389,7 @@ Before we can call the zome, we need to build the hApp bundle and deploy it to t
     hc app pack workdir/happ
     ```
 
-    This will create `happ/workdir/happ/greeter.happ`
+    This will create `service/workdir/happ/greeter.happ`
 
 1. Deploy the hApp to a local sandbox Holochain by running this in your nix-shell:
 

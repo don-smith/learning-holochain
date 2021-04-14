@@ -1,8 +1,8 @@
 <script>
-  import Buffer from 'buffer'
+  import { Buffer } from 'buffer'
   import { AppWebsocket } from '@holochain/conductor-api'
 
-  window.Buffer = Buffer.Buffer
+  window.Buffer = Buffer
 
   let greeting = ''
 
@@ -12,7 +12,7 @@
 
   async function getGreeting () {
     const appConnection = await AppWebsocket.connect('ws://localhost:8888')
-    const appInfo = await appConnection.appInfo({ installed_app_id: 'test-app' })
+    const appInfo = await appConnection.appInfo({ installed_app_id: 'greeter-app' })
     const cellId = appInfo.cell_data[0].cell_id
 
     const message = await appConnection.callZome({
